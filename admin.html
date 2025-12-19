@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{box-sizing:border-box}
+body{
+ background:#1f1f1f;
+ color:#fff;
+ font-family:Arial;
+ display:flex;
+ justify-content:center;
+ align-items:center;
+ min-height:100vh;
+ margin:0
+}
+.box{
+ width:520px;
+ background:#2f2f2f;
+ padding:22px;
+ border-radius:18px;
+}
+h2{text-align:center;color:#facc15;margin-top:0}
+
+/* ===== LOGIN ===== */
+.login-box{
+ width:360px;
+ background:#2f2f2f;
+ padding:24px;
+ border-radius:18px;
+ text-align:center
+}
+.login-box input{
+ width:100%;
+ padding:12px;
+ margin-top:10px;
+ border:none;
+ border-radius:10px;
+ background:#444;
+ color:#fff
+}
+.login-box button{
+ margin-top:14px;
+ padding:12px;
+ width:100%;
+ border:none;
+ border-radius:10px;
+ background:#2563eb;
+ color:#fff;
+ font-weight:bold;
+ cursor:pointer
+}
+.login-msg{
+ margin-top:12px;
+ font-size:14px
+}
+.error{color:#ef4444}
+
+/* ===== GAME ===== */
+.game{
+ padding:14px 0;
+ border-bottom:1px solid #444
+}
+.game:last-child{border-bottom:none}
+.top{
+ display:grid;
+ grid-template-columns:1fr auto auto;
+ align-items:center;
+ gap:12px
+}
+.state{
+ padding:6px 14px;
+ border-radius:20px;
+ font-size:12px;
+ font-weight:bold;
+ min-width:90px;
+ text-align:center
+}
+.on{background:#dc2626}
+.off{background:#16a34a}
+
+/* ===== SWITCH ===== */
+.switch{
+ position:relative;
+ width:46px;height:24px
+}
+.switch input{display:none}
+.slider{
+ position:absolute;
+ inset:0;
+ background:#555;
+ border-radius:30px;
+ transition:.25s
+}
+.slider:before{
+ content:'';
+ position:absolute;
+ width:18px;height:18px;
+ left:3px;top:3px;
+ background:#fff;
+ border-radius:50%;
+ transition:.25s
+}
+.switch input:checked + .slider{
+ background:#dc2626
+}
+.switch input:checked + .slider:before{
+ transform:translateX(22px)
+}
+
+/* ===== INPUT ===== */
+textarea,input{
+ width:100%;
+ margin-top:10px;
+ padding:10px;
+ border-radius:10px;
+ border:none;
+ background:#444;
+ color:#fff
+}
+button{
+ margin-top:10px;
+ padding:10px;
+ width:100%;
+ border:none;
+ border-radius:10px;
+ background:#2563eb;
+ color:#fff;
+ font-weight:bold;
+ cursor:pointer
+}
+
+/* ===== ADD MONEY ===== */
+.add-money{
+ margin-top:20px;
+ padding-top:16px;
+ border-top:2px dashed #555
+}
+.notice{text-align:center;margin-top:10px}
+.success{color:#22c55e}
+.error{color:#ef4444}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div class="login-box" id="loginBox">
+ <h2>ADMIN LOGIN</h2>
+ <input id="adminUser" placeholder="Username">
+ <input id="adminPass" type="password" placeholder="Password">
+ <button onclick="adminLogin()">ĐĂNG NHẬP</button>
+ <div id="loginMsg" class="login-msg"></div>
+</div>
+
+<!-- ADMIN -->
+<div class="box" id="adminBox" style="display:none">
+ <h2>ADMIN QUẢN LÝ</h2>
+
+ <!-- PUBG -->
+ <div class="game">
+  <div class="top">
+   <b>PUBG</b>
+   <span id="s_pubg" class="state"></span>
+   <label class="switch">
+    <input type="checkbox" id="t_pubg" onchange="toggle('pubg')">
+    <span class="slider"></span>
+   </label>
+  </div>
+  <textarea id="r_pubg" placeholder="Lý do bảo trì PUBG..."></textarea>
+ </div>
+
+ <!-- LIÊN QUÂN -->
+ <div class="game">
+  <div class="top">
+   <b>LIÊN QUÂN</b>
+   <span id="s_lq" class="state"></span>
+   <label class="switch">
+    <input type="checkbox" id="t_lq" onchange="toggle('lq')">
+    <span class="slider"></span>
+   </label>
+  </div>
+  <textarea id="r_lq" placeholder="Lý do bảo trì Liên Quân..."></textarea>
+ </div>
+
+ <!-- CFM -->
+ <div class="game">
+  <div class="top">
+   <b>CFM</b>
+   <span id="s_cfm" class="state"></span>
+   <label class="switch">
+    <input type="checkbox" id="t_cfm" onchange="toggle('cfm')">
+    <span class="slider"></span>
+   </label>
+  </div>
+  <textarea id="r_cfm" placeholder="Lý do bảo trì CFM..."></textarea>
+ </div>
+
+ <!-- ADD MONEY -->
+ <div class="add-money">
+  <h3>💰 Cộng tiền User</h3>
+  <input id="u_name" placeholder="Username">
+  <input id="u_money" type="number" placeholder="Số tiền">
+  <button onclick="addMoney()">CỘNG TIỀN</button>
+  <div id="msg" class="notice"></div>
+ </div>
+</div>
+
+<script>
+/* ===== ADMIN LOGIN ===== */
+const ADMIN_USER='admin';
+const ADMIN_PASS='123456';
+
+if(localStorage.getItem('adminLogin')==='true'){
+ showAdmin();
+}
+
+function adminLogin(){
+ const u=document.getElementById('adminUser').value;
+ const p=document.getElementById('adminPass').value;
+ const msg=document.getElementById('loginMsg');
+
+ if(u===ADMIN_USER && p===ADMIN_PASS){
+  localStorage.setItem('adminLogin','true');
+  showAdmin();
+ }else{
+  msg.textContent='❌ Sai tài khoản hoặc mật khẩu';
+  msg.className='login-msg error';
+ }
+}
+
+function showAdmin(){
+ document.getElementById('loginBox').style.display='none';
+ document.getElementById('adminBox').style.display='block';
+}
+
+/* ===== GAME STATUS ===== */
+const games=['pubg','lq','cfm'];
+let data=JSON.parse(localStorage.getItem('adminGameStatus')) || {
+ pubg:{status:'ready',reason:''},
+ lq:{status:'ready',reason:''},
+ cfm:{status:'ready',reason:''}
+};
+
+function render(){
+ games.forEach(g=>{
+  const st=document.getElementById('s_'+g);
+  const tg=document.getElementById('t_'+g);
+  const rs=document.getElementById('r_'+g);
+
+  tg.checked=data[g].status==='maintain';
+  rs.value=data[g].reason||'';
+
+  if(data[g].status==='maintain'){
+   st.textContent='BẢO TRÌ';
+   st.className='state on';
+  }else{
+   st.textContent='SẴN SÀNG';
+   st.className='state off';
+  }
+ });
+}
+
+function toggle(g){
+ const on=document.getElementById('t_'+g).checked;
+ if(on){
+  data[g].status='maintain';
+  data[g].reason=document.getElementById('r_'+g).value.trim();
+ }else{
+  data[g].status='ready';
+  data[g].reason='';
+  document.getElementById('r_'+g).value='';
+ }
+ localStorage.setItem('adminGameStatus',JSON.stringify(data));
+ render();
+}
+
+/* ===== ADD MONEY ===== */
+function addMoney(){
+ const u=document.getElementById('u_name').value.trim();
+ const m=Number(document.getElementById('u_money').value);
+ const msg=document.getElementById('msg');
+
+ let users=JSON.parse(localStorage.getItem('users'))||[];
+ const user=users.find(x=>x.username===u);
+
+ if(!user||m<=0){
+  msg.textContent='❌ Dữ liệu không hợp lệ';
+  msg.className='notice error';
+  return;
+ }
+
+ user.money+=m;
+ localStorage.setItem('users',JSON.stringify(users));
+
+ msg.textContent=`✅ Đã cộng ${m.toLocaleString()}đ cho ${u}`;
+ msg.className='notice success';
+}
+
+render();
+</script>
+
+</body>
+</html>

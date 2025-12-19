@@ -1,0 +1,14 @@
+{
+  "pubg": [
+    { "user": "qwerpyyv", "pass": "123456" },
+    { "user": "pubg_acc02", "pass": "654321" }
+  ],
+  "lq": [
+    { "user": "lq_acc01iiii", "pass": "111111" },
+    { "user": "lq_acc02", "pass": "222222" }
+  ],
+  "cfm": [
+    { "user": "cfm_acc01", "pass": "abc123" },
+    { "user": "cfm_acc02", "pass": "xyz789" }
+  ]
+}

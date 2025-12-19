@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Shop Thuê Acc</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial;
+ background:#0f172a;
+ color:#fff;
+ overflow-x: hidden; /* Tránh hiện thanh cuộn ngang do tuyết */
+}
+
+/* ===== HIỆU ỨNG TUYẾT RƠI (CSS) ===== */
+.snowflake {
+  color: #fff;
+  font-size: 1em;
+  font-family: Arial, sans-serif;
+  text-shadow: 0 0 5px #000;
+  position: fixed;
+  top: -10%;
+  z-index: 9999;
+  user-select: none;
+  cursor: default;
+  animation-name: snowflakes-fall, snowflakes-shake;
+  animation-duration: 10s, 3s;
+  animation-timing-function: linear, ease-in-out;
+  animation-iteration-count: infinite, infinite;
+  animation-play-state: running, running;
+}
+@keyframes snowflakes-fall {
+  0% { top: -10%; }
+  100% { top: 100%; }
+}
+@keyframes snowflakes-shake {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(80px); }
+}
+
+/* ===== HEADER ===== */
+header{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:14px 20px;
+ background:#020617;
+ border-bottom:1px solid #1e293b
+}
+.brand{
+ font-size:22px;
+ font-weight:bold;
+ color:#facc15
+}
+.user-box{
+ display:flex;
+ gap:12px;
+ align-items:center
+}
+.user-box span{
+ background:#1e293b;
+ padding:6px 12px;
+ border-radius:20px
+}
+.user-box a{
+ background:#2563eb;
+ color:#fff;
+ text-decoration:none;
+ padding:6px 12px;
+ border-radius:20px
+}
+
+/* ===== MENU ===== */
+.menu-btn{
+ font-size:26px;
+ cursor:pointer;
+ display:none
+}
+.side-menu{
+ position:fixed;
+ top:0;left:-260px;
+ width:260px;height:100%;
+ background:#020617;
+ padding:20px;
+ transition:.3s;
+ z-index:1000
+}
+.side-menu.active{left:0}
+.side-menu h3{color:#facc15}
+.side-menu button{
+ width:100%;
+ padding:12px;
+ margin-bottom:10px;
+ background:#1e293b;
+ color:#fff;
+ border:none;
+ border-radius:10px;
+ cursor:pointer;
+ text-align:left
+}
+.side-menu button.logout{background:#dc2626}
+
+/* ===== GAMES ===== */
+.games{
+ display:grid;
+ grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+ gap:20px;
+ padding:20px
+}
+.game{
+ background:#020617;
+ border-radius:18px;
+ padding:16px;
+ box-shadow:0 10px 30px rgba(0,0,0,.4);
+ position:relative
+}
+.game img{
+ width:100%;
+ height:160px;
+ object-fit:cover;
+ border-radius:12px
+}
+.game h3{margin:10px 0}
+.status{
+ position:absolute;
+ top:12px;
+ right:12px;
+ padding:4px 10px;
+ border-radius:20px;
+ font-size:12px;
+ font-weight:bold
+}
+.ready{background:#16a34a}
+.maintain{background:#dc2626}
+
+.game button,.game select{
+ width:100%;
+ margin-top:10px;
+ padding:10px;
+ border-radius:10px;
+ border:none
+}
+.game button{
+ background:#2563eb;
+ color:#fff;
+ font-weight:bold;
+ cursor:pointer
+}
+.guide-btn{background:#334155}
+.price-box{display:none}
+
+/* ===== MODAL ===== */
+.modal{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.7);
+ display:none;
+ justify-content:center;
+ align-items:center;
+ z-index:2000
+}
+.modal-box{
+ background:#020617;
+ padding:20px;
+ border-radius:16px;
+ max-width:360px;
+ width:90%;
+ text-align:center
+}
+.modal-box button{
+ margin-top:12px;
+ padding:10px 16px;
+ border:none;
+ border-radius:10px;
+ background:#2563eb;
+ color:#fff;
+ cursor:pointer
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="brand">ONLYHAX</div>
+
+ <div class="user-box" id="userBox">
+  <a href="login.html">Đăng nhập</a>
+  <a href="register.html">Đăng ký</a>
+ </div>
+
+ <div class="menu-btn" id="menuBtn" onclick="toggleMenu()">☰</div>
+</header>
+
+<div class="side-menu" id="sideMenu">
+ <h3>👤 Tài khoản</h3>
+ <button onclick="deposit()">💰 Nạp tiền</button>
+ <button onclick="viewDeposit()">📜 Lịch sử nạp</button>
+ <button onclick="viewRent()">🔄 Lịch sử thuê</button>
+ <button class="logout" onclick="logout()">🚪 Đăng xuất</button>
+</div>
+
+<div class="games" id="games"></div>
+
+<div class="modal" id="modal">
+ <div class="modal-box">
+  <div id="modalText"></div>
+  <button onclick="closeModal()">Đóng</button>
+ </div>
+</div>
+
+<script>
+/* ===== USER ===== */
+let user=JSON.parse(localStorage.getItem('currentUser'));
+const userBox=document.getElementById('userBox');
+if(user){
+ userBox.innerHTML=`<span>${user.username} | ${user.money.toLocaleString()}đ</span>`;
+ document.getElementById('menuBtn').style.display='block';
+}
+
+/* ===== MENU ===== */
+function toggleMenu(){
+ document.getElementById('sideMenu').classList.toggle('active');
+}
+function logout(){
+ localStorage.removeItem('currentUser');
+ location.reload();
+}
+
+/* ===== GAMES ===== */
+const gamesData=[
+ {id:'pubg',name:'PUBG',img:'img/pubg.jpg'},
+ {id:'lq',name:'Liên Quân',img:'img/lienquan.jpg'},
+ {id:'cfm',name:'CFM',img:'img/cfm.jpg'}
+];
+
+/* ===== ADMIN STATUS (CHUNG) ===== */
+let statusData=JSON.parse(localStorage.getItem('adminGameStatus'));
+if(!statusData){
+ statusData={
+  pubg:{status:'ready',reason:''},
+  lq:{status:'ready',reason:''},
+  cfm:{status:'ready',reason:''}
+ };
+ localStorage.setItem('adminGameStatus',JSON.stringify(statusData));
+}
+
+/* ===== RENDER ===== */
+const games=document.getElementById('games');
+games.innerHTML='';
+gamesData.forEach(g=>{
+ const st=statusData[g.id];
+ games.innerHTML+=`
+ <div class="game">
+  <span class="status ${st.status==='ready'?'ready':'maintain'}">
+   ${st.status==='ready'?'SẴN SÀNG':'BẢO TRÌ'}
+  </span>
+  <img src="${g.img}">
+  <h3>${g.name}</h3>
+
+  <button onclick="togglePrice('${g.id}')">Xem Giá</button>
+
+  <div class="price-box" id="priceBox-${g.id}">
+   <select id="price-${g.id}">
+    <option value="10000">10.000đ / 1h</option>
+    <option value="20000">20.000đ / 3h</option>
+    <option value="30000">30.000đ / 6h</option>
+   </select>
+   <button onclick="rent('${g.id}')">Xác nhận thuê</button>
+  </div>
+
+  <button class="guide-btn" onclick="guide('${g.id}')">📘 Hướng dẫn</button>
+ </div>`;
+});
+
+/* ===== GUIDE ===== */
+function guide(id){
+ const st=statusData[id];
+ if(st.status==='maintain'){
+  showModal('🔧 Game đang bảo trì<br><b>'+st.reason+'</b>');
+  return;
+ }
+ location.href=`guide-${id}.html`;
+}
+
+/* ===== PRICE ===== */
+function togglePrice(id){
+ const st=statusData[id];
+ if(st.status==='maintain'){
+  showModal('🔧 Game đang bảo trì<br><b>'+st.reason+'</b>');
+  return;
+ }
+ document.getElementById('priceBox-'+id).style.display='block';
+}
+
+/* ===== RENT ===== */
+async function rent(id){
+ if(!user){
+  showModal('⚠️ Vui lòng đăng nhập trước khi thuê');
+  return;
+ }
+
+ const st=statusData[id];
+ if(st.status==='maintain'){
+  showModal('🔧 Game đang bảo trì<br><b>'+st.reason+'</b>');
+  return;
+ }
+
+ const price=Number(document.getElementById('price-'+id).value);
+ if(user.money<price){
+  showModal('❌ Số dư không đủ');
+  return;
+ }
+
+ const res=await fetch('accounts.json');
+ const accs=await res.json();
+ const acc=accs[id].shift();
+ if(!acc){
+  showModal('❌ Hết tài khoản');
+  return;
+ }
+
+ user.money-=price;
+ localStorage.setItem('currentUser',JSON.stringify(user));
+
+ let rent=JSON.parse(localStorage.getItem('rentHistory'))||[];
+ rent.push({
+  game:id,
+  price,
+  account:acc.username,
+  time:new Date().toLocaleString()
+ });
+ localStorage.setItem('rentHistory',JSON.stringify(rent));
+
+ showModal(`✅ Thuê thành công<br>TK: ${acc.username}<br>MK: ${acc.password}`);
+}
+
+/* ===== MENU ACTIONS ===== */
+function deposit(){
+ const a=prompt('Nhập số tiền nạp');
+ if(!a||isNaN(a))return;
+ user.money+=Number(a);
+ localStorage.setItem('currentUser',JSON.stringify(user));
+ let h=JSON.parse(localStorage.getItem('depositHistory'))||[];
+ h.push({amount:Number(a),time:new Date().toLocaleString()});
+ localStorage.setItem('depositHistory',JSON.stringify(h));
+ location.reload();
+}
+function viewDeposit(){
+ alert(JSON.stringify(JSON.parse(localStorage.getItem('depositHistory'))||[],null,2));
+}
+function viewRent(){
+ alert(JSON.stringify(JSON.parse(localStorage.getItem('rentHistory'))||[],null,2));
+}
+
+/* ===== MODAL ===== */
+function showModal(t){
+ document.getElementById('modalText').innerHTML=t;
+ document.getElementById('modal').style.display='flex';
+}
+function closeModal(){
+ document.getElementById('modal').style.display='none';
+}
+
+/* ===== KHỞI TẠO HIỆU ỨNG TUYẾT RƠI (JS THÊM VÀO) ===== */
+function createSnowflake() {
+  const snow = document.createElement('div');
+  snow.innerHTML = "❄";
+  snow.classList.add('snowflake');
+  snow.style.left = Math.random() * 100 + 'vw';
+  snow.style.animationDuration = Math.random() * 3 + 7 + 's'; // Rơi từ 7-10s
+  snow.style.opacity = Math.random();
+  snow.style.fontSize = Math.random() * 10 + 10 + 'px';
+
+  document.body.appendChild(snow);
+
+  setTimeout(() => {
+    snow.remove();
+  }, 10000);
+}
+setInterval(createSnowflake, 300); // Cứ 300ms tạo 1 hạt tuyết
+</script>
+
+</body>
+</html>
